@@ -14,6 +14,7 @@ aside{position:relative;min-width:0;min-height:0;display:flex;flex-direction:col
 @media(max-height:640px){.topbar{height:50px}.side-heading{padding-top:12px}.selection-card .crop{max-height:75px}label{margin-top:15px}.delivery{padding:10px 18px}.canvas-footer{padding:6px 14px;min-height:44px}}
 /* 批注浮层独立于截图缩放，始终限制在画布的可见范围内。 */
 .annotation{position:absolute;z-index:4;width:360px;border:1px solid #51697f;border-radius:14px;background:#242d39;box-shadow:0 16px 55px #0008,0 0 0 1px #b9ddff08;padding:14px;line-height:1.6;overflow:auto;scrollbar-color:#526278 #242d39}
+.annotation-hierarchy{display:flex;align-items:center;gap:6px;margin:0 0 10px}.annotation-hierarchy>span{flex:1;font-size:11px;color:#9babbe}.annotation-hierarchy button{display:flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;background:#1d2631;border-color:#405064}.annotation-hierarchy button:hover{background:#314154}.annotation-hierarchy button svg{width:13px;height:13px}
 .annotation-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}.annotation-head strong{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.annotation-dot{display:grid;place-items:center;width:25px;height:25px;background:#318ec0;border-radius:8px;color:white;font-size:14px}.annotation .icon{width:26px;height:26px}.annotation textarea{display:block;border:0;background:#1b222d;min-height:96px;font-size:13px;padding:10px 12px;border-radius:8px}.annotation textarea:focus-visible{outline:1px solid #72b6de;outline-offset:0}.annotation-foot{display:flex;align-items:center;gap:10px;margin-top:12px}.annotation-foot span{flex:1;font-size:10px;color:#9babbe}.annotation .primary{width:auto;padding:6px 12px;font-size:12px;white-space:nowrap}.annotation-error{color:#ffc4c4;font-size:11px;margin-top:8px}.annotation-help{font-size:10px;color:#8f9fb2;margin-top:9px}.annotation:focus-within{border-color:#78b9df}
 #editComment{margin-top:12px;width:100%}#commentCount{margin-left:4px}#togglePanel{display:flex;align-items:center;width:auto;gap:5px;font-size:12px;padding:5px 9px}.comment-markers{position:absolute;inset:0;pointer-events:none}.comment-marker{position:absolute;pointer-events:auto;display:grid;place-items:center;transform:translate(-50%,-50%);width:26px;height:26px;border:2px solid #c4e7ff;background:#237da9;color:white;border-radius:50%;padding:0;line-height:1;font-size:11px;box-shadow:0 2px 8px #0006}.comment-marker:hover{background:#389ac7}.comment-marker[aria-current]{background:#cdeeff;color:#174963}.card textarea{margin-top:8px}.card-head .card-title{padding:0;text-align:left;flex:1;background:transparent;border:0;color:inherit;font-size:11px}
 .handoff{position:fixed;z-index:6;right:18px;bottom:68px;width:340px;max-width:calc(100vw - 36px);padding:13px 15px;margin:0;box-shadow:0 8px 30px #0005}.handoff-heading{display:flex;align-items:center;gap:8px}.handoff-heading strong{flex:1}.handoff .icon{width:24px;height:24px}.handoff .prompt-popover{position:fixed;width:520px;max-width:calc(100vw - 36px);left:auto;right:18px;bottom:18px;max-height:calc(100dvh - 90px)}
@@ -38,6 +39,7 @@ aside{position:relative;min-width:0;min-height:0;display:flex;flex-direction:col
   </div>
   <section id="annotation" class="annotation" role="dialog" aria-label="选区批注" aria-describedby="annotationHelp" hidden>
    <div class="annotation-head"><span class="annotation-dot" aria-hidden="true">✎</span><strong id="annotationTitle">添加批注</strong><button id="closeAnnotation" class="icon quiet" aria-label="收起批注" title="收起批注，保留草稿"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg></button></div>
+   <div id="annotationHierarchy" class="annotation-hierarchy" role="group" aria-label="选择控件层级" hidden><span>选择层级</span><button id="annotationParent" aria-label="选择父级控件" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 5-5 5 5M10 5v11"/></svg>父级</button><button id="annotationChild" aria-label="选择子级控件" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 5 5 5-5M10 15V4"/></svg>子级</button></div>
    <textarea id="note" aria-label="批注内容" rows="3" maxlength="4000" placeholder="这里希望怎样调整？"></textarea>
    <p id="annotationError" class="annotation-error" role="alert" hidden></p>
    <div class="annotation-foot"><span>Enter 复制 · Shift+Enter 换行</span><button id="submitComment" class="primary">复制批注 ↵</button></div>
@@ -65,11 +67,13 @@ aside{position:relative;min-width:0;min-height:0;display:flex;flex-direction:col
 <div id="handoff" class="handoff" role="status" hidden><div class="handoff-heading"><strong id="handoffTitle">上下文已准备好</strong><button id="closeHandoff" class="icon quiet" aria-label="关闭复制提示">×</button></div><p id="handoffHelp">点击 Codex 输入框，按 Ctrl+V 粘贴。</p><details id="promptDetails"><summary>查看复制内容</summary><div class="prompt-popover"><div class="prompt-heading"><strong>复制到 Codex 的内容</strong><button id="closePrompt">关闭</button></div><textarea id="prompt" rows="9" readonly aria-label="可粘贴到 Codex 的完整上下文"></textarea><button id="copyAgain">再次复制</button></div></details></div>
 <script>
 const $=id=>document.getElementById(id);
+const childTrail=new Map();
 let frame=null, selected=null, busy=false, copying=false, drag=null, queue=[], zoomScale=1, statusTimer, annotationOpen=false, editingItem=null, composing=false, compositionEndedAt=-Infinity;
+let annotationPoint=null, annotationSide=null;
 const sourceHints={exact:'WPF 调试信息提供的位置',name:'按所属视图中的唯一 x:Name / Name 定位',view:'所属视图位置，非此元素的精确行号'};
 function status(text,error=false){clearTimeout(statusTimer);$('status').textContent=text;$('status').className=error?'error':'';$('status').hidden=!text;if(!error)statusTimer=setTimeout(()=>{$('status').hidden=true;},3600);}
 async function json(url,options){const r=await fetch(url,options);const data=await r.json();if(!r.ok||data.error||data.ok===false)throw Error(typeof data.error==='string'?data.error:(data.error?.message||data.message||'请求失败'));return data;}
-function updateButtons(){for(const id of ['list','sample','emptySample','windows','zoom'])$(id).disabled=busy||copying;for(const id of ['zoom','zoomOut','zoomIn'])$(id).disabled=busy||copying||!frame;$('refresh').disabled=busy||copying||!$('windows').value;$('copy').disabled=busy||copying||(!selected&&!queue.length);$('copy').textContent=copying?'正在准备截图与源码…':`复制给 Codex${queue.length?' · '+pending().length+' 项':''}`;for(const id of ['add','clearSelection','copyImage','editComment','submitComment'])$(id).disabled=!selected||busy||copying;$('parent').disabled=!selected?.element||selected.element.parentId===null||busy||copying;$('closeAnnotation').disabled=copying;$('submitComment').textContent=copying?'正在准备…':'复制批注 ↵';}
+function updateButtons(){for(const id of ['list','sample','emptySample','windows','zoom'])$(id).disabled=busy||copying;for(const id of ['zoom','zoomOut','zoomIn'])$(id).disabled=busy||copying||!frame;$('refresh').disabled=busy||copying||!$('windows').value;$('copy').disabled=busy||copying||(!selected&&!queue.length);$('copy').textContent=copying?'正在准备截图与源码…':`复制给 Codex${queue.length?' · '+pending().length+' 项':''}`;for(const id of ['add','clearSelection','copyImage','editComment','submitComment'])$(id).disabled=!selected||busy||copying;$('closeAnnotation').disabled=copying;$('submitComment').textContent=copying?'正在准备…':'复制批注 ↵';updateHierarchy();}
 function invalidate(){ $('handoff').hidden=true;$('annotationError').hidden=true; }
 async function action(work){if(busy||copying)return;busy=true;updateButtons();try{await work();}catch(e){status(e.message,true);}finally{busy=false;updateButtons();}}
 function clearFrame(){frame=null;select(null);$('stage').hidden=true;$('empty').hidden=false;$('download').hidden=true;$('warning').hidden=true;}
@@ -119,6 +123,10 @@ function drawOutline(bounds,region=false){$('outline').hidden=!bounds;if(!bounds
 function cropCanvas(item){const canvas=document.createElement('canvas'),b=item.bounds,img=item.image;const sx=img.naturalWidth/item.frame.width,sy=img.naturalHeight/item.frame.height;const x=Math.max(0,Math.floor(b.x*sx)),y=Math.max(0,Math.floor(b.y*sy)),right=Math.min(img.naturalWidth,Math.ceil((b.x+b.width)*sx)),bottom=Math.min(img.naturalHeight,Math.ceil((b.y+b.height)*sy));canvas.width=Math.max(1,right-x);canvas.height=Math.max(1,bottom-y);canvas.getContext('2d').drawImage(img,x,y,canvas.width,canvas.height,0,0,canvas.width,canvas.height);return canvas;}
 function regionElements(bounds){return frame.elements.filter(el=>{if(el.type==='System.Windows.Documents.AdornerLayer')return false;const b=el.bounds,w=Math.max(0,Math.min(b.x+b.width,bounds.x+bounds.width)-Math.max(b.x,bounds.x)),h=Math.max(0,Math.min(b.y+b.height,bounds.y+bounds.height)-Math.max(b.y,bounds.y));return w*h>=b.width*b.height*.6;});}
 function select(value){
+ if(!value){annotationPoint=null;annotationSide=null;}
+ // 记录当前控件到根的路径：向上扩大选区后，向下仍回到原来的分支。
+ if(!value?.element)childTrail.clear();
+ for(let node=value?.element;node?.parentId!=null;node=frame.elements[node.parentId])childTrail.set(node.parentId,node.id);
  selected=value;if(!value){annotationOpen=false;editingItem=null;$('note').value='';}invalidate();$('selectionCard').classList.toggle('is-empty',!value);$('elementDetails').hidden=!value;$('selectionMore').open=false;drawOutline(value?.bounds,value?.kind==='region');$('crop').hidden=!value;$('saveCrop').hidden=!value;
  $('selectedType').textContent=value?(value.kind==='region'?'框选区域':value.element.type.split('.').pop()):'框选想调整的地方';
  $('selectedName').textContent=value?(value.kind==='region'?`${Math.round(value.bounds.width)} × ${Math.round(value.bounds.height)} · ${regionElements(value.bounds).length} 个控件`:(value.element.name?'x:Name="'+value.element.name+'"':'未命名控件')):'也可以点击某个控件';
@@ -128,17 +136,33 @@ function select(value){
  if(element){for(const [key,value]of Object.entries(element.properties)){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=value??'—';$('properties').append(dt,dd);}const ancestors=[];let node=element;while(node){ancestors.unshift(node);node=node.parentId===null?null:frame.elements[node.parentId];}for(const ancestor of ancestors){const button=document.createElement('button');button.textContent=ancestor.name||ancestor.type.split('.').pop();button.title=ancestor.type;if(ancestor.id===element.id)button.setAttribute('aria-current','true');button.onclick=()=>{if(!copying&&!busy)selectElement(ancestor);};$('crumbs').append(button);}}
  updateButtons();if(value)openAnnotation();else positionAnnotation();
 }
-function selectElement(el){select(el?{kind:'element',element:el,bounds:{...el.bounds}}:null);}
+function selectElement(el){if(!busy&&!copying)select(el?{kind:'element',element:el,bounds:{...el.bounds}}:null);}
+function hierarchyTarget(direction){
+ const element=selected?.element;if(!element||!frame)return null;
+ if(direction==='parent')return element.parentId==null?null:frame.elements[element.parentId];
+ const remembered=frame.elements[childTrail.get(element.id)];
+ if(remembered?.parentId===element.id)return remembered;
+ return frame.elements.find(child=>child.parentId===element.id&&child.type!=='System.Windows.Documents.AdornerLayer');
+}
+function updateHierarchy(){
+ $('annotationHierarchy').hidden=!selected?.element;
+ for(const [id,direction]of [['annotationParent','parent'],['annotationChild','child'],['parent','parent']]){
+  const target=hierarchyTarget(direction),button=$(id);
+  button.disabled=busy||copying||!target;
+  button.title=target?`选择${direction==='parent'?'父':'子'}级：${target.name||target.type.split('.').pop()}`:(direction==='parent'?'已到最外层控件':'没有可选的子控件');
+ }
+}
+function navigateHierarchy(direction){const target=hierarchyTarget(direction);if(target)selectElement(target);}
 function point(event){const r=$('shot').getBoundingClientRect();return{x:Math.max(0,Math.min(frame.width,(event.clientX-r.left)/r.width*frame.width)),y:Math.max(0,Math.min(frame.height,(event.clientY-r.top)/r.height*frame.height))};}
 function dragBounds(a,b){return{x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),width:Math.abs(a.x-b.x),height:Math.abs(a.y-b.y)};}
 $('shot').ondragstart=e=>e.preventDefault();
 $('stage').onpointerdown=e=>{if(!frame||busy||copying||e.button!==0||e.target.closest('.comment-marker'))return;e.preventDefault();drag={id:e.pointerId,start:point(e),clientX:e.clientX,clientY:e.clientY,moved:false};positionAnnotation();$('stage').setPointerCapture(e.pointerId);};
 $('stage').onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;e.preventDefault();drag.moved ||= Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)>5;if(drag.moved)drawOutline(dragBounds(drag.start,point(e)),true);};
-$('stage').onpointerup=e=>{if(!drag||drag.id!==e.pointerId)return;const gesture=drag,p=point(e);drag=null;$('stage').releasePointerCapture(e.pointerId);if(gesture.moved){const b=dragBounds(gesture.start,p);if(b.width>0&&b.height>0){pick({kind:'region',bounds:b});status('');}else drawOutline(selected?.bounds,selected?.kind==='region');}else{const matches=frame.elements.filter(el=>{const b=el.bounds;return el.type!=='System.Windows.Documents.AdornerLayer'&&p.x>=b.x&&p.x<b.x+b.width&&p.y>=b.y&&p.y<b.y+b.height;});const el=matches.at(-1);pick(el?{kind:'element',element:el,bounds:{...el.bounds}}:null);}};
+$('stage').onpointerup=e=>{if(!drag||drag.id!==e.pointerId)return;const gesture=drag,p=point(e);drag=null;$('stage').releasePointerCapture(e.pointerId);if(gesture.moved){const b=dragBounds(gesture.start,p);if(b.width>0&&b.height>0){pick({kind:'region',bounds:b},p);status('');}else drawOutline(selected?.bounds,selected?.kind==='region');}else{const matches=frame.elements.filter(el=>{const b=el.bounds;return el.type!=='System.Windows.Documents.AdornerLayer'&&p.x>=b.x&&p.x<b.x+b.width&&p.y>=b.y&&p.y<b.y+b.height;});const el=matches.at(-1);pick(el?{kind:'element',element:el,bounds:{...el.bounds}}:null,p);}};
 function cancelDrag(){if(drag){const id=drag.id;drag=null;if($('stage').hasPointerCapture(id))$('stage').releasePointerCapture(id);drawOutline(selected?.bounds,selected?.kind==='region');}positionAnnotation();}
 $('stage').onpointercancel=cancelDrag;$('stage').onlostpointercapture=cancelDrag;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drag){cancelDrag();e.preventDefault();}});
-function draft(){return selected?{frame:selected.frame,kind:selected.kind,bounds:{...selected.bounds},element:selected.element,note:$('note').value.trim(),crop:selected.crop}:null;}
+function draft(){return selected?{frame:selected.frame,kind:selected.kind,bounds:{...selected.bounds},element:selected.element,note:$('note').value.trim(),crop:selected.crop,annotationPoint}:null;}
 function key(item){return JSON.stringify([item.frame.frameId,item.kind,item.element?.id,item.bounds,item.note]);}
 function pending(){const current=draft(),items=queue.map(item=>item===editingItem&&current?current:item);if(current&&!editingItem&&!items.some(item=>key(item)===key(current)))items.push(current);return items;}
 function renderQueue(){
@@ -169,7 +193,8 @@ function saveDraft(){
 function addSelection(){saveDraft();select(null);renderQueue();status(`已保留 ${queue.length} 条批注，继续框选即可`);}
 $('clearQueue').onclick=()=>{if(copying)return;if(editingItem)select(null);queue=[];invalidate();renderQueue();};
 $('add').onclick=()=>{try{addSelection();}catch(e){status(e.message,true);}};
-$('parent').onclick=()=>{if(selected?.element?.parentId!=null)selectElement(frame.elements[selected.element.parentId]);};$('clearSelection').onclick=()=>select(null);
+$('parent').onclick=$('annotationParent').onclick=()=>navigateHierarchy('parent');
+$('annotationChild').onclick=()=>navigateHierarchy('child');$('clearSelection').onclick=()=>select(null);
 $('note').oninput=()=>{invalidate();updateButtons();};$('zoom').onchange=()=>applyZoom();
 async function copyText(text){try{await navigator.clipboard.writeText(text);return true;}catch{const box=$('prompt');box.value=text;$('promptDetails').open=true;box.focus();box.select();try{return document.execCommand('copy');}catch{return false;}}}
 async function finishCopy(text){const copied=await copyText(text);$('handoffTitle').textContent=copied?'已复制，去 Codex 粘贴':'上下文已保存 · 请手动复制';$('handoffHelp').textContent=copied?'在 Codex 输入框按 Ctrl+V 即可。':'浏览器未允许写入剪贴板。选中下方文字，按 Ctrl+C，再到 Codex 输入框粘贴。';status(copied?'':'请手动复制下方已选中的上下文文字。',!copied);return copied;}
@@ -206,7 +231,9 @@ function commentError(message){
 function openAnnotation(){
  if(!selected)return;
  annotationOpen=true;$('annotation').hidden=false;
- $('annotationTitle').textContent=editingItem?`批注 ${queue.indexOf(editingItem)+1}`:(selected.kind==='region'?'批注这个区域':`批注 · ${selected.element.name||selected.element.type.split('.').pop()}`);
+ const targetName=selected.kind==='region'?'这个区域':selected.element.name||selected.element.type.split('.').pop();
+ $('annotationTitle').textContent=editingItem?`批注 ${queue.indexOf(editingItem)+1} · ${targetName}`:`批注 · ${targetName}`;
+ $('annotationTitle').title=selected.element?.type||'框选区域';
  positionAnnotation();
  if($('annotation').style.visibility!=='hidden')$('note').focus({preventScroll:true});
 }
@@ -219,23 +246,40 @@ function positionAnnotation(){
  if(!resume.hidden){resume.style.left=(selected.bounds.x+selected.bounds.width)/frame.width*100+'%';resume.style.top=selected.bounds.y/frame.height*100+'%';}
  const popup=$('annotation');popup.hidden=!annotationOpen||!selected||!!drag;
  if(popup.hidden)return;
- const area=$('viewport').getBoundingClientRect(),surface=document.querySelector('.workspace').getBoundingClientRect(),anchor=$('outline').getBoundingClientRect();
+ const viewport=$('viewport'),viewportRect=viewport.getBoundingClientRect(),surface=document.querySelector('.workspace').getBoundingClientRect(),anchor=$('outline').getBoundingClientRect();
+ const area={left:viewportRect.left+viewport.clientLeft,top:viewportRect.top+viewport.clientTop,right:viewportRect.left+viewport.clientLeft+viewport.clientWidth,bottom:viewportRect.top+viewport.clientTop+viewport.clientHeight};
  const visible=anchor.right>area.left&&anchor.left<area.right&&anchor.bottom>area.top&&anchor.top<area.bottom;
  popup.style.visibility=visible?'visible':'hidden';if(!visible)return;
- const margin=12,gap=12,minX=area.left+margin,minY=area.top+margin,maxX=area.right-margin,maxY=area.bottom-margin;
- popup.style.width=Math.min(360,Math.max(1,maxX-minX))+'px';popup.style.maxHeight=Math.max(1,maxY-minY)+'px';
+ popup.style.width=Math.min(360,Math.max(1,area.right-area.left-24))+'px';popup.style.maxHeight=Math.max(1,area.bottom-area.top-24)+'px';
  const width=popup.offsetWidth,height=popup.offsetHeight;
- const left=Math.max(minX,Math.min(maxX-width,anchor.left));
- // 优先紧贴选区下方；靠近画布底部时翻到上方，再夹紧到可见范围。
- let top=anchor.bottom+gap;
- if(top+height>maxY)top=anchor.top-gap-height;
- top=Math.max(minY,Math.min(maxY-height,top));
+ const shot=$('shot').getBoundingClientRect();
+ const focus=annotationPoint?{x:shot.left+annotationPoint.x/frame.width*shot.width,y:shot.top+annotationPoint.y/frame.height*shot.height}:{x:(anchor.left+anchor.right)/2,y:(anchor.top+anchor.bottom)/2};
+ const {left,top,side}=annotationPlacement(area,anchor,width,height,focus,annotationSide);
+ annotationSide=side;
  popup.style.left=(left-surface.left)+'px';popup.style.top=(top-surface.top)+'px';
 }
-function pick(value){
+function annotationPlacement(area,anchor,width,height,focus,previousSide){
+ const margin=12,gap=12,clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+ const minX=area.left+margin,minY=area.top+margin,maxX=area.right-margin-width,maxY=area.bottom-margin-height;
+ // 用选区的可见部分定位，避免放大或滚动后被屏外边缘牵走。
+ const visible={left:Math.max(area.left,anchor.left),top:Math.max(area.top,anchor.top),right:Math.min(area.right,anchor.right),bottom:Math.min(area.bottom,anchor.bottom)};
+ const point={x:clamp(focus.x,visible.left,visible.right),y:clamp(focus.y,visible.top,visible.bottom)};
+ const x=Math.max(visible.left,point.x-width/2),y=point.y-height/4;
+ const candidates={bottom:{left:x,top:visible.bottom+gap},top:{left:x,top:visible.top-gap-height},right:{left:visible.right+gap,top:y},left:{left:visible.left-gap-width,top:y}};
+ const tall=visible.bottom-visible.top>height&&visible.bottom-visible.top>visible.right-visible.left;
+ const order=tall?['right','left','bottom','top']:['bottom','top','right','left'];
+ // 首先少遮挡选区，其次避开点击处；效果相当时保留方向，减少层级切换时跳动。
+ return order.map((side,rank)=>{
+  const left=clamp(candidates[side].left,minX,maxX),top=clamp(candidates[side].top,minY,maxY);
+  const overlap=Math.max(0,Math.min(left+width,visible.right)-Math.max(left,visible.left))*Math.max(0,Math.min(top+height,visible.bottom)-Math.max(top,visible.top));
+  const coversPoint=left<=point.x&&left+width>=point.x&&top<=point.y&&top+height>=point.y;
+  return {left,top,side,overlap,coversPoint,rank};
+ }).sort((a,b)=>(Math.abs(a.overlap-b.overlap)>1?a.overlap-b.overlap:0)||Number(a.coversPoint)-Number(b.coversPoint)||Number(b.side===previousSide)-Number(a.side===previousSide)||a.rank-b.rank)[0];
+}
+function pick(value,focus=null){
  try{
   if(selected&&($('note').value.trim()||editingItem))saveDraft();
-  editingItem=null;$('note').value='';select(value);renderQueue();
+  editingItem=null;childTrail.clear();annotationPoint=focus;annotationSide=null;$('note').value='';select(value);renderQueue();
  }catch(e){drawOutline(selected?.bounds,selected?.kind==='region');openAnnotation();commentError(e.message);}
 }
 function editSaved(item){
@@ -243,7 +287,7 @@ function editSaved(item){
  if(selected&&editingItem===item){openAnnotation();return;}
  try{
   if(selected&&editingItem!==item&&($('note').value.trim()||editingItem))saveDraft();
-  editingItem=item;$('note').value=item.note;
+  editingItem=item;childTrail.clear();annotationPoint=item.annotationPoint||null;annotationSide=null;$('note').value=item.note;
   select({kind:item.kind,bounds:{...item.bounds},element:item.element});
   // 侧栏入口可能对应屏外标记，先滚动选区到视野内，再定位浮层。
   const viewport=$('viewport'),area=viewport.getBoundingClientRect(),bounds=$('outline').getBoundingClientRect();

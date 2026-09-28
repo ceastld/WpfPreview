@@ -52,6 +52,8 @@ Attach 须在 Application 的 UI 线程调用。返回的 `WpfPreviewSession.Pre
 ## 使用与边界
 
 - 拖动框选、单击控件，直接在选区旁输入批注；Enter 保存并复制上下文，Shift+Enter 换行。中文输入法的确认键不会误提交。
+- 批注框内可切换父级／子级控件，保留已输入文字；向上扩大选区后，向下会回到原来的分支。
+- 批注框根据四周空间避开选区，竖长选区优先显示在侧边；缩放、滚动时保持在画布可见范围内。
 - 页面固定在视口内；画布支持缩放、滚动，批注可以合并后复制。
 - 导出局部截图、原始窗口截图和 `context.json`，路径相对 `ProjectRoot`。上下文文件包含 `repositoryRootFromContext`，可从文件所在目录还原基准。建议忽略 `.wpf-preview/`。
 - 当前交付方式是剪贴板，需要在 Codex 或其它助手中粘贴。尚未接入 MCP，也不会自动写入 Codex 桌面输入框。
@@ -72,3 +74,11 @@ dotnet pack src/WpfPreview/WpfPreview.csproj -c Release -o artifacts/packages
 ```
 
 GitHub Actions 在 Windows 上构建示例、运行测试并生成 NuGet 包。库没有 Quicker 依赖；仓库中的 `Directory.Build.*` 和 `Directory.Packages.props` 使它也能作为子模块嵌入已有解决方案。
+
+网页交互回归测试只需 Node.js 22 或更新版本，无需安装 npm 包，在仓库根目录运行：
+
+```powershell
+node --test tests/Web/preview.test.cjs
+```
+
+测试直接加载网页中的实际脚本，覆盖父子层级往返、草稿与导出选区、Enter／输入法防误提交，以及 729 组浮层避让位置。GitHub Actions 会独立运行这组测试。测试中的 DOM、布局与网络是替身；CSS 排版、真实 WPF 截图和浏览器剪贴板权限仍需人工或浏览器验证。Node 仅用于开发测试，使用库不需要 Node。
