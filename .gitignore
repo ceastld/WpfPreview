@@ -1,0 +1,7 @@
+bin/
+obj/
+.wpf-preview/
+artifacts/
+.vs/
+TestResults/
+*.user

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WPF 样式预览</title>
+<style>
+:root{color-scheme:dark;font:13px/1.6 system-ui,"Microsoft YaHei",sans-serif;color:#e2e6ed;background:#171a1f;--line:#303640;--muted:#909ba9;--accent:#76cfff}
+*{box-sizing:border-box}html{height:100%;overflow:hidden}body{margin:0;height:100dvh;overflow:hidden;display:flex;flex-direction:column}button,select,textarea,a{font:inherit}button,select,.download,summary{color:inherit}button,select,.download{border:1px solid var(--line);border-radius:7px;background:#252b34;padding:6px 10px}button,a,summary{cursor:pointer}button:hover,.download:hover,summary:hover{background:#303844}button:disabled{opacity:.35;cursor:default}button:focus-visible,select:focus-visible,a:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button svg,summary svg{width:16px;height:16px;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.icon{display:grid;place-items:center;width:30px;height:30px;padding:6px}.quiet{border-color:transparent;background:transparent;color:#acb7c6}.muted{color:var(--muted);font-size:12px}h1,h2,p{margin:0}h1{font-size:14px;font-weight:600;white-space:nowrap}h2{font-size:14px;font-weight:600}[hidden]{display:none!important}
+.topbar{height:58px;flex:none;display:flex;align-items:center;gap:20px;padding:0 18px;border-bottom:1px solid var(--line);background:#1d2127;z-index:5}.brand{display:flex;gap:9px;align-items:center}.brand-mark{color:var(--accent);font-size:20px;line-height:1}.preview-tools{display:flex;align-items:center;gap:8px;flex:1;min-width:0}#windows{width:240px;min-width:0;max-width:100%;background:#171b21;border-color:var(--line);text-overflow:ellipsis}.spacer{flex:1}.popover{position:relative}.popover>summary{display:grid;place-items:center;list-style:none;width:32px;height:32px;border-radius:6px}.popover>summary::-webkit-details-marker{display:none}.menu{position:absolute;z-index:10;right:0;top:calc(100% + 8px);width:192px;padding:6px;border:1px solid #434d5b;border-radius:9px;background:#252b34;box-shadow:0 12px 32px #0007}.menu button,.menu a{color:inherit;display:block;width:100%;border:0;background:transparent;border-radius:5px;padding:8px 10px;text-align:left;font-size:12px;text-decoration:none}.menu button:hover,.menu a:hover{background:#364150}.menu hr{border:0;border-top:1px solid #3b4451;margin:5px}.menu p{font-size:11px;color:var(--muted);padding:7px 10px}.popover:not([open])>.menu{display:none}
+main{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 320px;flex:1;min-height:0;overflow:hidden}.workspace{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(#2b313a .8px,transparent .8px);background-size:24px 24px}.viewport{padding:32px;overflow:auto;flex:1;min-width:0;min-height:0;overscroll-behavior:contain;scrollbar-color:#454e5c #191d23;outline-offset:-3px}.canvas-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;flex:none;background:#191d23;border-top:1px solid #282e37;min-height:52px}.canvas-hint{font-size:11px;color:#7f8b9b;flex:1}.zoom-control{display:flex;gap:2px;align-items:center;border:1px solid var(--line);border-radius:7px;padding:2px;background:#222831}.zoom-control button{border:0;background:transparent;width:27px;height:27px;padding:0;font-size:17px}.zoom-control select{border:0;background:transparent;padding:3px 2px;width:92px;font-size:11px}.zoom-control button:hover{background:#34404e}#zoomPercent{display:none}#stage{position:relative;line-height:0;margin:auto;touch-action:none;user-select:none}#shot{width:100%;display:block;cursor:crosshair;box-shadow:0 12px 50px #0006;user-select:none;-webkit-user-drag:none}#outline{position:absolute;border:2px solid #58c9ff;background:#58c9ff18;pointer-events:none}#outline.region{border-style:dashed}#selectionBadge{position:absolute;left:0;bottom:100%;padding:3px 7px;white-space:nowrap;line-height:1.5;background:#176b92;color:white;font-size:11px;border-radius:4px 4px 0 0}.empty{height:100%;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--muted);text-align:center}.empty strong{font-size:16px;color:#d1d8e3}.empty button{margin-top:6px}#status{position:absolute;z-index:4;bottom:66px;left:16px;max-width:calc(100% - 32px);padding:8px 12px;border:1px solid #3e5365;border-radius:8px;background:#24313eee;color:#d6eaff;font-size:12px;pointer-events:none;box-shadow:0 5px 20px #0003}#status.error{border-color:#885358;background:#3d272bee;color:#ffc4c4}#warning{padding:8px 16px;background:#443922;color:#f4d095;font-size:11px;flex:none}
+aside{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;background:#1e232b;border-left:1px solid var(--line);overflow:hidden;overflow-wrap:anywhere}.side-heading{display:flex;align-items:center;justify-content:space-between;padding:17px 18px 12px}.side-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 18px 18px;scrollbar-gutter:stable;scrollbar-color:#454e5c #1e232b}.selection-card{border:1px solid #35404e;border-radius:10px;padding:12px;background:#191e25}.selection-heading{display:flex;gap:6px;align-items:center}.selection-heading>div:first-child{flex:1;min-width:0}#selectedType{font-size:13px;font-weight:600}#selectedName{font-size:11px;margin-top:2px;color:var(--muted)}.selection-heading .popover{align-self:start}.selection-heading .icon{align-self:start}.crop{max-width:100%;max-height:135px;object-fit:contain;border-radius:3px;display:block;margin:12px auto 0;user-select:none;-webkit-user-drag:none}.selection-card.is-empty{border-style:dashed;background:transparent;padding:24px 15px;text-align:center}.selection-card.is-empty #selectedType{font-size:13px;font-weight:500;color:#bec8d7}.selection-card.is-empty #selectedName{margin-top:6px;font-size:11px}.selection-card.is-empty .selection-tools,.selection-card.is-empty #clearSelection{display:none}.selection-symbol{display:block;font-size:25px;line-height:1;margin:0 0 14px;color:#7b93ad}.selection-card:not(.is-empty) .selection-symbol{display:none}label{display:block;margin:22px 0 9px;font-size:12px;font-weight:500;color:#c9d3e1}textarea{width:100%;resize:none;color:inherit;background:#171c23;border:1px solid #3b4553;border-radius:8px;padding:11px;line-height:1.7;font-size:12px}textarea::placeholder{color:#6f7c8d}.note-help{margin:6px 0 10px;font-size:11px}.add-row{display:flex;justify-content:flex-end}#add{padding:4px 0;font-size:12px;color:#a2c8e4}#add:hover{color:#d0ecff;background:transparent}#add:disabled{visibility:hidden}.disclosure{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}.disclosure>summary{color:#9daabd;font-size:12px;padding:3px 0;list-style:none;display:flex;align-items:center;gap:7px}.disclosure>summary::before{content:'›';font-size:16px;line-height:1;transition:transform .15s}.disclosure[open]>summary::before{transform:rotate(90deg)}.disclosure>summary::-webkit-details-marker{display:none}.disclosure>summary:hover{background:transparent;color:#d2deec}.count{font-size:10px;background:#354354;color:#c0d7ec;padding:0 6px;border-radius:10px}.details-body{padding-top:7px}#source{white-space:pre-wrap;font:10px/1.7 ui-monospace,Consolas,monospace;background:#15191f;border:1px solid var(--line);padding:9px;border-radius:7px;user-select:all}dl{margin:0}dt{font-size:11px;color:var(--muted);margin-top:10px}dd{margin:0;font-family:ui-monospace,Consolas,monospace;font-size:11px}#crumbs{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}#crumbs button{font-size:10px;padding:2px 6px}#crumbs button[aria-current]{border-color:#58c9ff;color:#8adbff}.card{border:1px solid #35404e;border-radius:8px;padding:10px;margin:10px 0;background:#191e25}.card-head{display:flex;justify-content:space-between;align-items:start;gap:8px;font-size:11px}.card-head button{padding:1px 6px;font-size:11px}.card textarea{font-size:11px;padding:7px}.card .crop{max-height:75px;margin:10px 0}.bottom-note{margin:10px 0 0;font-size:11px;color:#8391a3}.delivery{padding:16px 18px;border-top:1px solid var(--line);background:#1e232b;flex:none}.primary{width:100%;background:#338fbe;border-color:#459bc5;color:#fff;font-weight:600;padding:9px 12px}.primary:hover{background:#409fcc}#copyHint{font-size:10px;margin:8px 0 0;color:#929eaf;text-align:center}.handoff{margin-top:10px;padding:10px;border:1px solid #3b6957;border-radius:8px;background:#20372e}.handoff strong{font-size:12px;color:#b3f2cf}.handoff p{font-size:11px;margin:3px 0;color:#a9cbb9}.handoff summary{font-size:11px;color:#b3d8c6}.prompt-popover{position:absolute;z-index:6;left:12px;right:12px;bottom:12px;max-height:calc(100% - 24px);overflow:auto;padding:14px;border:1px solid #5f748c;border-radius:10px;background:#202b37;box-shadow:0 12px 40px #000a}.prompt-popover textarea{height:240px;max-height:45vh;margin:8px 0;font:11px/1.5 Consolas,monospace}.prompt-heading{display:flex;align-items:center;justify-content:space-between}.prompt-heading button{padding:3px 8px}#promptDetails:not([open])>.prompt-popover{display:none}.context-closed main{grid-template-columns:minmax(0,1fr)}.context-closed aside{display:none}
+@media(max-width:950px){.topbar{gap:14px;padding:0 14px}main{grid-template-columns:minmax(0,1fr) 300px}.viewport{padding:24px}.canvas-hint{font-size:10px}#windows{width:210px}}
+@media(max-width:700px){.topbar{gap:10px;height:54px}.brand-mark{display:none}h1{font-size:12px}#windows{width:160px}.preview-tools{gap:4px}#refresh span{display:none}main{grid-template-columns:minmax(0,1fr)}aside{position:absolute;right:0;top:0;bottom:0;width:min(320px,92%);z-index:3;box-shadow:-10px 0 30px #0006}.canvas-hint{display:none}.canvas-footer{justify-content:center}.side-heading{padding-top:14px}}
+@media(max-height:640px){.topbar{height:50px}.side-heading{padding-top:12px}.selection-card .crop{max-height:75px}label{margin-top:15px}.delivery{padding:10px 18px}.canvas-footer{padding:6px 14px;min-height:44px}}
+/* 批注浮层独立于截图缩放，始终限制在画布的可见范围内。 */
+.annotation{position:absolute;z-index:4;width:360px;border:1px solid #51697f;border-radius:14px;background:#242d39;box-shadow:0 16px 55px #0008,0 0 0 1px #b9ddff08;padding:14px;line-height:1.6;overflow:auto;scrollbar-color:#526278 #242d39}
+.annotation-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}.annotation-head strong{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.annotation-dot{display:grid;place-items:center;width:25px;height:25px;background:#318ec0;border-radius:8px;color:white;font-size:14px}.annotation .icon{width:26px;height:26px}.annotation textarea{display:block;border:0;background:#1b222d;min-height:96px;font-size:13px;padding:10px 12px;border-radius:8px}.annotation textarea:focus-visible{outline:1px solid #72b6de;outline-offset:0}.annotation-foot{display:flex;align-items:center;gap:10px;margin-top:12px}.annotation-foot span{flex:1;font-size:10px;color:#9babbe}.annotation .primary{width:auto;padding:6px 12px;font-size:12px;white-space:nowrap}.annotation-error{color:#ffc4c4;font-size:11px;margin-top:8px}.annotation-help{font-size:10px;color:#8f9fb2;margin-top:9px}.annotation:focus-within{border-color:#78b9df}
+#editComment{margin-top:12px;width:100%}#commentCount{margin-left:4px}#togglePanel{display:flex;align-items:center;width:auto;gap:5px;font-size:12px;padding:5px 9px}.comment-markers{position:absolute;inset:0;pointer-events:none}.comment-marker{position:absolute;pointer-events:auto;display:grid;place-items:center;transform:translate(-50%,-50%);width:26px;height:26px;border:2px solid #c4e7ff;background:#237da9;color:white;border-radius:50%;padding:0;line-height:1;font-size:11px;box-shadow:0 2px 8px #0006}.comment-marker:hover{background:#389ac7}.comment-marker[aria-current]{background:#cdeeff;color:#174963}.card textarea{margin-top:8px}.card-head .card-title{padding:0;text-align:left;flex:1;background:transparent;border:0;color:inherit;font-size:11px}
+.handoff{position:fixed;z-index:6;right:18px;bottom:68px;width:340px;max-width:calc(100vw - 36px);padding:13px 15px;margin:0;box-shadow:0 8px 30px #0005}.handoff-heading{display:flex;align-items:center;gap:8px}.handoff-heading strong{flex:1}.handoff .icon{width:24px;height:24px}.handoff .prompt-popover{position:fixed;width:520px;max-width:calc(100vw - 36px);left:auto;right:18px;bottom:18px;max-height:calc(100dvh - 90px)}
+</style>
+<body class="context-closed">
+<header class="topbar">
+ <div class="brand"><span class="brand-mark" aria-hidden="true">⌗</span><h1>WPF 样式预览</h1></div>
+ <nav class="preview-tools" aria-label="预览操作">
+  <select id="windows" aria-label="选择 WPF 窗口"><option value="">加载窗口列表…</option></select>
+  <button id="refresh" class="quiet" title="重新获取当前窗口的截图" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 1 0 .4 5M16 3v4h-4"/></svg><span> 刷新</span></button>
+  <span class="spacer"></span>
+  <details id="previewMore" class="popover"><summary aria-label="更多预览操作" title="更多操作"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg></summary><div class="menu"><button id="list">重新扫描窗口</button><button id="sample" hidden>打开示例窗口</button><a id="download" download="wpf-preview.png" hidden>保存完整截图</a><hr><p>真实 WPF 窗口的静态快照。<br>窗口变化后点击刷新。</p></div></details>
+  <button id="togglePanel" class="icon quiet" aria-label="显示批注与详情" title="显示批注与详情" aria-controls="contextPanel" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3" width="15" height="14" rx="2"/><path d="M12 3v14"/></svg><span>批注</span><span id="commentCount" class="count" hidden>0</span></button>
+ </nav>
+</header>
+<main>
+ <section class="workspace" aria-label="WPF 窗口快照">
+  <p id="warning" hidden></p>
+  <div class="viewport" id="viewport" tabindex="0" aria-label="可缩放和滚动的 WPF 画布">
+   <div id="empty" class="empty"><strong>先打开一个 WPF 窗口</strong><span>预览真实界面，框选想调整的地方。</span><button id="emptySample" hidden>打开设置示例</button></div>
+   <div id="stage" hidden><img id="shot" draggable="false" alt="真实 WPF 截图：拖动框选区域，点击选择控件"><div id="outline" hidden><span id="selectionBadge"></span></div><div id="commentMarkers" class="comment-markers" aria-label="已保存的批注"></div><button id="resumeComment" class="comment-marker" aria-label="继续编辑批注" title="继续编辑批注" hidden>✎</button></div>
+  </div>
+  <section id="annotation" class="annotation" role="dialog" aria-label="选区批注" aria-describedby="annotationHelp" hidden>
+   <div class="annotation-head"><span class="annotation-dot" aria-hidden="true">✎</span><strong id="annotationTitle">添加批注</strong><button id="closeAnnotation" class="icon quiet" aria-label="收起批注" title="收起批注，保留草稿"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg></button></div>
+   <textarea id="note" aria-label="批注内容" rows="3" maxlength="4000" placeholder="这里希望怎样调整？"></textarea>
+   <p id="annotationError" class="annotation-error" role="alert" hidden></p>
+   <div class="annotation-foot"><span>Enter 复制 · Shift+Enter 换行</span><button id="submitComment" class="primary">复制批注 ↵</button></div>
+   <p id="annotationHelp" class="annotation-help">自动附带截图与源码；复制后到 Codex 按 Ctrl+V。</p>
+  </section>
+  <div id="status" role="status" aria-live="polite">正在连接本地预览服务…</div>
+  <footer class="canvas-footer"><span class="canvas-hint">点击或框选 → 就地批注 → 回车复制</span><div class="zoom-control" title="滚轮移动 · Ctrl＋滚轮缩放"><button id="zoomOut" aria-label="缩小画布" disabled>−</button><select id="zoom" aria-label="预览缩放"><option value="fit">适应画布</option><option value="width">适应宽度</option><option value="0.25">25%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option><option value="4">400%</option><option id="customZoom" value="custom" hidden>自定义</option></select><button id="zoomIn" aria-label="放大画布" disabled>＋</button></div><span id="zoomPercent"></span></footer>
+ </section>
+ <aside id="contextPanel" aria-label="准备给 Codex 的上下文">
+  <div class="side-heading"><h2>批注与详情</h2><span class="muted">截图 + 源码</span></div>
+  <div class="side-scroll">
+   <section id="selectionCard" class="selection-card is-empty" aria-label="当前选区">
+    <span class="selection-symbol" aria-hidden="true">⛶</span>
+    <div class="selection-heading"><div><div id="selectedType">框选想调整的地方</div><div id="selectedName">也可以点击某个控件</div></div><details id="selectionMore" class="popover selection-tools"><summary aria-label="选区操作" title="选区操作"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="16" cy="10" r="1"/></svg></summary><div class="menu"><button id="parent" disabled>选择父元素</button><button id="copyImage" disabled>复制局部图片</button><a id="saveCrop" download="wpf-selection.png" hidden>保存局部图片</a></div></details><button id="clearSelection" class="icon quiet" aria-label="清除选区" title="清除选区" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg></button></div>
+    <img id="crop" class="crop" draggable="false" alt="当前选区的局部截图" hidden>
+   </section>
+   <button id="editComment" class="quiet" disabled>编辑选区批注</button>
+   <div class="add-row"><button id="add" class="quiet" disabled>＋ 再选一处</button></div>
+   <details id="queueDetails" class="disclosure" hidden><summary>已保存的批注 <span id="queueCount" class="count">0</span></summary><div id="queueEmpty" class="muted">清单为空，可继续框选。</div><div id="queue"></div><button id="clearQueue" class="quiet" hidden>清空清单</button></details>
+   <details id="elementDetails" class="disclosure" hidden><summary>控件与源码</summary><div class="details-body"><div id="crumbs" aria-label="元素父级"></div><p id="sourceHint" class="muted">选中后显示文件和定位依据</p><pre id="source">—</pre><dl id="properties"></dl></div></details>
+  </div>
+  <footer class="delivery"><button id="copy" class="primary" disabled>复制给 Codex</button><p id="copyHint">自动附带截图与源码 · 复制后在 Codex 粘贴</p></footer>
+ </aside>
+</main>
+<div id="handoff" class="handoff" role="status" hidden><div class="handoff-heading"><strong id="handoffTitle">上下文已准备好</strong><button id="closeHandoff" class="icon quiet" aria-label="关闭复制提示">×</button></div><p id="handoffHelp">点击 Codex 输入框，按 Ctrl+V 粘贴。</p><details id="promptDetails"><summary>查看复制内容</summary><div class="prompt-popover"><div class="prompt-heading"><strong>复制到 Codex 的内容</strong><button id="closePrompt">关闭</button></div><textarea id="prompt" rows="9" readonly aria-label="可粘贴到 Codex 的完整上下文"></textarea><button id="copyAgain">再次复制</button></div></details></div>
+<script>
+const $=id=>document.getElementById(id);
+let frame=null, selected=null, busy=false, copying=false, drag=null, queue=[], zoomScale=1, statusTimer, annotationOpen=false, editingItem=null, composing=false, compositionEndedAt=-Infinity;
+const sourceHints={exact:'WPF 调试信息提供的位置',name:'按所属视图中的唯一 x:Name / Name 定位',view:'所属视图位置，非此元素的精确行号'};
+function status(text,error=false){clearTimeout(statusTimer);$('status').textContent=text;$('status').className=error?'error':'';$('status').hidden=!text;if(!error)statusTimer=setTimeout(()=>{$('status').hidden=true;},3600);}
+async function json(url,options){const r=await fetch(url,options);const data=await r.json();if(!r.ok||data.error||data.ok===false)throw Error(typeof data.error==='string'?data.error:(data.error?.message||data.message||'请求失败'));return data;}
+function updateButtons(){for(const id of ['list','sample','emptySample','windows','zoom'])$(id).disabled=busy||copying;for(const id of ['zoom','zoomOut','zoomIn'])$(id).disabled=busy||copying||!frame;$('refresh').disabled=busy||copying||!$('windows').value;$('copy').disabled=busy||copying||(!selected&&!queue.length);$('copy').textContent=copying?'正在准备截图与源码…':`复制给 Codex${queue.length?' · '+pending().length+' 项':''}`;for(const id of ['add','clearSelection','copyImage','editComment','submitComment'])$(id).disabled=!selected||busy||copying;$('parent').disabled=!selected?.element||selected.element.parentId===null||busy||copying;$('closeAnnotation').disabled=copying;$('submitComment').textContent=copying?'正在准备…':'复制批注 ↵';}
+function invalidate(){ $('handoff').hidden=true;$('annotationError').hidden=true; }
+async function action(work){if(busy||copying)return;busy=true;updateButtons();try{await work();}catch(e){status(e.message,true);}finally{busy=false;updateButtons();}}
+function clearFrame(){frame=null;select(null);$('stage').hidden=true;$('empty').hidden=false;$('download').hidden=true;$('warning').hidden=true;}
+async function list(preferId=null){
+ const old=$('windows').value, windows=await json('/wpf-preview/windows');$('windows').replaceChildren();
+ for(const w of windows)$('windows').add(new Option(w.title||w.type.split('.').pop(),w.id));
+ if(!windows.length){if(selected)addSelection();$('windows').add(new Option('暂无可见 WPF 窗口',''));clearFrame();status('请在当前应用中打开一个 WPF 窗口，然后重新扫描。');return;}
+ $('windows').value=windows.find(w=>w.id===preferId)?.id||windows.find(w=>w.id===old)?.id||windows[0].id;
+ await refresh();
+}
+async function refresh(){
+ if(selected)addSelection();if(!$('windows').value)return;status('正在获取 WPF 渲染与元素信息…');
+ const next=await json('/wpf-preview/frame?id='+encodeURIComponent($('windows').value));
+ // 新图片解码成功后再替换，失败时保留仍可使用的旧快照和清单。
+ const img=new Image();img.src=next.image;await img.decode();
+ frame=next;$('shot').src=next.image;select(null);$('stage').hidden=false;$('empty').hidden=true;applyZoom();renderMarkers();
+ $('download').href=frame.image;$('download').hidden=false;
+ const warning=[frame.warning,frame.truncated?'元素树较大，当前仅展示前 3000 个可见元素。':''].filter(Boolean).join(' ');
+ $('warning').textContent=warning;$('warning').hidden=!warning;
+ status('截图已更新');
+}
+function applyZoom(anchor){
+ if(!frame)return;
+ const viewport=$('viewport'),stage=$('stage'),mode=$('zoom').value,box=viewport.getBoundingClientRect(),before=stage.getBoundingClientRect();
+ const style=getComputedStyle(viewport),paddingX=parseFloat(style.paddingLeft)+parseFloat(style.paddingRight),paddingY=parseFloat(style.paddingTop)+parseFloat(style.paddingBottom);
+ const availableWidth=Math.max(1,viewport.clientWidth-paddingX),availableHeight=Math.max(1,viewport.clientHeight-paddingY);
+ const target=anchor||{x:box.left+viewport.clientWidth/2,y:box.top+viewport.clientHeight/2};
+ const u=before.width?(target.x-before.left)/before.width:0,v=before.height?(target.y-before.top)/before.height:0;
+ zoomScale=mode==='fit'?Math.min(availableWidth/frame.width,availableHeight/frame.height,1):mode==='width'?availableWidth/frame.width:mode==='custom'?zoomScale:Number(mode);
+ stage.style.width=Math.max(1,frame.width*zoomScale)+'px';stage.style.maxWidth='none';stage.style.aspectRatio=frame.width+'/'+frame.height;
+ $('zoomPercent').textContent=Math.round(zoomScale*100)+'%';
+ if(mode==='fit'){viewport.scrollLeft=0;viewport.scrollTop=0;}else{const after=stage.getBoundingClientRect();viewport.scrollLeft+=after.left+u*after.width-target.x;viewport.scrollTop+=after.top+v*after.height-target.y;}
+ positionAnnotation();
+}
+function changeZoom(factor,anchor){if(!frame||busy||copying||drag)return;zoomScale=Math.max(.1,Math.min(4,zoomScale*factor));$('customZoom').textContent=Math.round(zoomScale*100)+'%';$('customZoom').hidden=false;$('zoom').value='custom';applyZoom(anchor);}
+$('zoomOut').onclick=()=>changeZoom(1/1.25);$('zoomIn').onclick=()=>changeZoom(1.25);
+$('viewport').addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();if(e.deltaY)changeZoom(e.deltaY<0?1.1:1/1.1,{x:e.clientX,y:e.clientY});}},{passive:false});
+new ResizeObserver(()=>{if(frame&&['fit','width'].includes($('zoom').value))applyZoom();else positionAnnotation();}).observe($('viewport'));
+$('viewport').addEventListener('scroll',positionAnnotation,{passive:true});
+$('togglePanel').onclick=()=>{const closed=document.body.classList.toggle('context-closed'),label=closed?'显示批注与详情':'隐藏批注与详情';$('togglePanel').setAttribute('aria-label',label);$('togglePanel').title=label;$('togglePanel').setAttribute('aria-expanded',String(!closed));};
+// 次要操作用普通按钮展开，点击空白、执行操作或按 Esc 后收起。
+document.addEventListener('click',e=>{for(const menu of document.querySelectorAll('.popover[open]')){if(!menu.contains(e.target)||e.target.closest('button,a'))menu.open=false;}});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;for(const menu of document.querySelectorAll('.popover[open]')){menu.open=false;menu.querySelector('summary').focus();}if($('promptDetails').open){$('promptDetails').open=false;$('promptDetails').querySelector('summary').focus();}});
+$('closePrompt').onclick=()=>{$('promptDetails').open=false;$('promptDetails').querySelector('summary').focus();};
+
+function drawOutline(bounds,region=false){$('outline').hidden=!bounds;if(!bounds||!frame)return;Object.assign($('outline').style,{left:bounds.x/frame.width*100+'%',top:bounds.y/frame.height*100+'%',width:bounds.width/frame.width*100+'%',height:bounds.height/frame.height*100+'%'});$('outline').className=region?'region':'';$('selectionBadge').textContent=`${region?'区域':'控件'} · ${Math.round(bounds.width)} × ${Math.round(bounds.height)}`;}
+function cropCanvas(item){const canvas=document.createElement('canvas'),b=item.bounds,img=item.image;const sx=img.naturalWidth/item.frame.width,sy=img.naturalHeight/item.frame.height;const x=Math.max(0,Math.floor(b.x*sx)),y=Math.max(0,Math.floor(b.y*sy)),right=Math.min(img.naturalWidth,Math.ceil((b.x+b.width)*sx)),bottom=Math.min(img.naturalHeight,Math.ceil((b.y+b.height)*sy));canvas.width=Math.max(1,right-x);canvas.height=Math.max(1,bottom-y);canvas.getContext('2d').drawImage(img,x,y,canvas.width,canvas.height,0,0,canvas.width,canvas.height);return canvas;}
+function regionElements(bounds){return frame.elements.filter(el=>{if(el.type==='System.Windows.Documents.AdornerLayer')return false;const b=el.bounds,w=Math.max(0,Math.min(b.x+b.width,bounds.x+bounds.width)-Math.max(b.x,bounds.x)),h=Math.max(0,Math.min(b.y+b.height,bounds.y+bounds.height)-Math.max(b.y,bounds.y));return w*h>=b.width*b.height*.6;});}
+function select(value){
+ selected=value;if(!value){annotationOpen=false;editingItem=null;$('note').value='';}invalidate();$('selectionCard').classList.toggle('is-empty',!value);$('elementDetails').hidden=!value;$('selectionMore').open=false;drawOutline(value?.bounds,value?.kind==='region');$('crop').hidden=!value;$('saveCrop').hidden=!value;
+ $('selectedType').textContent=value?(value.kind==='region'?'框选区域':value.element.type.split('.').pop()):'框选想调整的地方';
+ $('selectedName').textContent=value?(value.kind==='region'?`${Math.round(value.bounds.width)} × ${Math.round(value.bounds.height)} · ${regionElements(value.bounds).length} 个控件`:(value.element.name?'x:Name="'+value.element.name+'"':'未命名控件')):'也可以点击某个控件';
+ $('properties').replaceChildren();$('crumbs').replaceChildren();const element=value?.element;
+ $('source').textContent=element?.source?`${element.source.path}:${element.source.line}`:'—';$('sourceHint').textContent=element?(sourceHints[element.source?.kind]||'无可用源码位置，可结合父级查找。'):(value?'区域内相关控件及其祖先、源码位置会写入上下文。':'选中后显示文件和定位依据');
+ if(value){value.frame=frame;value.image=$('shot');value.crop=cropCanvas(value).toDataURL('image/png');$('crop').src=value.crop;$('saveCrop').href=value.crop;}
+ if(element){for(const [key,value]of Object.entries(element.properties)){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=value??'—';$('properties').append(dt,dd);}const ancestors=[];let node=element;while(node){ancestors.unshift(node);node=node.parentId===null?null:frame.elements[node.parentId];}for(const ancestor of ancestors){const button=document.createElement('button');button.textContent=ancestor.name||ancestor.type.split('.').pop();button.title=ancestor.type;if(ancestor.id===element.id)button.setAttribute('aria-current','true');button.onclick=()=>{if(!copying&&!busy)selectElement(ancestor);};$('crumbs').append(button);}}
+ updateButtons();if(value)openAnnotation();else positionAnnotation();
+}
+function selectElement(el){select(el?{kind:'element',element:el,bounds:{...el.bounds}}:null);}
+function point(event){const r=$('shot').getBoundingClientRect();return{x:Math.max(0,Math.min(frame.width,(event.clientX-r.left)/r.width*frame.width)),y:Math.max(0,Math.min(frame.height,(event.clientY-r.top)/r.height*frame.height))};}
+function dragBounds(a,b){return{x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),width:Math.abs(a.x-b.x),height:Math.abs(a.y-b.y)};}
+$('shot').ondragstart=e=>e.preventDefault();
+$('stage').onpointerdown=e=>{if(!frame||busy||copying||e.button!==0||e.target.closest('.comment-marker'))return;e.preventDefault();drag={id:e.pointerId,start:point(e),clientX:e.clientX,clientY:e.clientY,moved:false};positionAnnotation();$('stage').setPointerCapture(e.pointerId);};
+$('stage').onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;e.preventDefault();drag.moved ||= Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)>5;if(drag.moved)drawOutline(dragBounds(drag.start,point(e)),true);};
+$('stage').onpointerup=e=>{if(!drag||drag.id!==e.pointerId)return;const gesture=drag,p=point(e);drag=null;$('stage').releasePointerCapture(e.pointerId);if(gesture.moved){const b=dragBounds(gesture.start,p);if(b.width>0&&b.height>0){pick({kind:'region',bounds:b});status('');}else drawOutline(selected?.bounds,selected?.kind==='region');}else{const matches=frame.elements.filter(el=>{const b=el.bounds;return el.type!=='System.Windows.Documents.AdornerLayer'&&p.x>=b.x&&p.x<b.x+b.width&&p.y>=b.y&&p.y<b.y+b.height;});const el=matches.at(-1);pick(el?{kind:'element',element:el,bounds:{...el.bounds}}:null);}};
+function cancelDrag(){if(drag){const id=drag.id;drag=null;if($('stage').hasPointerCapture(id))$('stage').releasePointerCapture(id);drawOutline(selected?.bounds,selected?.kind==='region');}positionAnnotation();}
+$('stage').onpointercancel=cancelDrag;$('stage').onlostpointercapture=cancelDrag;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drag){cancelDrag();e.preventDefault();}});
+function draft(){return selected?{frame:selected.frame,kind:selected.kind,bounds:{...selected.bounds},element:selected.element,note:$('note').value.trim(),crop:selected.crop}:null;}
+function key(item){return JSON.stringify([item.frame.frameId,item.kind,item.element?.id,item.bounds,item.note]);}
+function pending(){const current=draft(),items=queue.map(item=>item===editingItem&&current?current:item);if(current&&!editingItem&&!items.some(item=>key(item)===key(current)))items.push(current);return items;}
+function renderQueue(){
+ $('queueCount').textContent=queue.length;$('queueDetails').hidden=!queue.length;$('clearQueue').hidden=!queue.length;$('clearQueue').disabled=copying;$('queue').replaceChildren();$('queueEmpty').hidden=!!queue.length;
+ $('commentCount').hidden=!queue.length;$('commentCount').textContent=queue.length;
+ queue.forEach((item,index)=>{
+  const card=document.createElement('div');card.className='card';
+  const head=document.createElement('div');head.className='card-head';
+  const title=document.createElement('button');title.className='card-title';title.textContent=`${index+1}. ${item.element?.name||item.element?.type.split('.').pop()||'框选区域'} · ${item.frame.title}`;
+  title.disabled=copying||busy||frame?.frameId!==item.frame.frameId;title.title='在画布上编辑这条批注';title.onclick=()=>editSaved(item);
+  const remove=document.createElement('button');remove.textContent='移除';remove.setAttribute('aria-label',`移除第 ${index+1} 项`);remove.disabled=copying;
+  remove.onclick=()=>{if(copying)return;if(editingItem===item)select(null);queue.splice(index,1);invalidate();renderQueue();};
+  head.append(title,remove);
+  const image=document.createElement('img');image.className='crop';image.draggable=false;image.alt=`第 ${index+1} 项截图`;image.src=item.crop;
+  const note=document.createElement('textarea');note.rows=2;note.maxLength=4000;note.value=item.note;note.placeholder='这处希望怎么改？';note.setAttribute('aria-label',`第 ${index+1} 项调整要求`);note.disabled=copying;
+  note.oninput=()=>{item.note=note.value;if(editingItem===item)$('note').value=note.value;invalidate();updateButtons();renderMarkers();};
+  card.append(head,image,note);$('queue').append(card);
+ });
+ renderMarkers();updateButtons();
+}
+function saveDraft(){
+ const item=draft();if(!item)return;
+ if(editingItem){Object.assign(editingItem,item);return editingItem;}
+ const existing=queue.find(other=>key(other)===key(item));if(existing)return existing;
+ if(queue.length>=8)throw Error('一次最多 8 条批注，请先移除一些批注。');
+ queue.push(item);return item;
+}
+function addSelection(){saveDraft();select(null);renderQueue();status(`已保留 ${queue.length} 条批注，继续框选即可`);}
+$('clearQueue').onclick=()=>{if(copying)return;if(editingItem)select(null);queue=[];invalidate();renderQueue();};
+$('add').onclick=()=>{try{addSelection();}catch(e){status(e.message,true);}};
+$('parent').onclick=()=>{if(selected?.element?.parentId!=null)selectElement(frame.elements[selected.element.parentId]);};$('clearSelection').onclick=()=>select(null);
+$('note').oninput=()=>{invalidate();updateButtons();};$('zoom').onchange=()=>applyZoom();
+async function copyText(text){try{await navigator.clipboard.writeText(text);return true;}catch{const box=$('prompt');box.value=text;$('promptDetails').open=true;box.focus();box.select();try{return document.execCommand('copy');}catch{return false;}}}
+async function finishCopy(text){const copied=await copyText(text);$('handoffTitle').textContent=copied?'已复制，去 Codex 粘贴':'上下文已保存 · 请手动复制';$('handoffHelp').textContent=copied?'在 Codex 输入框按 Ctrl+V 即可。':'浏览器未允许写入剪贴板。选中下方文字，按 Ctrl+C，再到 Codex 输入框粘贴。';status(copied?'':'请手动复制下方已选中的上下文文字。',!copied);return copied;}
+async function copyContext(saveComment=false){
+ if(copying||busy)return;
+ const items=pending();if(!items.length)return;
+ if(items.length>8){commentError('一次最多 8 条批注，请先移除一些批注。');return;}
+ copying=true;$('note').disabled=true;renderQueue();
+ try{
+  const result=await json('/wpf-preview/context',{method:'POST',headers:{'Content-Type':'application/json','X-Wpf-Preview':'context'},body:JSON.stringify({selections:items.map(item=>({frameId:item.frame.frameId,kind:item.kind,elementId:item.element?.id,bounds:item.bounds,note:item.note}))})});
+  $('prompt').value=result.text;
+  // 只有服务端已保存成功才提交草稿；失败时保留原选区和文字供重试。
+  if(saveComment)editingItem=saveDraft();
+  $('handoff').hidden=false;
+  const copied=await finishCopy(result.text);
+  if(copied&&saveComment){
+   select(null);$('handoff').hidden=false;
+   $('handoffTitle').textContent=`已复制 ${items.length} 条批注`;
+   $('handoffHelp').textContent='到 Codex 输入框按 Ctrl+V；也可以继续批注，最后一起粘贴。';
+   $('viewport').focus({preventScroll:true});
+  }
+ }catch(e){commentError(e.message);}
+ finally{copying=false;$('note').disabled=false;renderQueue();positionAnnotation();}
+}
+$('copy').onclick=()=>copyContext();
+$('copyAgain').onclick=()=>finishCopy($('prompt').value);
+$('copyImage').onclick=async()=>{if(!selected)return;try{const canvas=cropCanvas(selected),blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);status('已复制局部图片，可粘贴到输入框。需要源码信息时，请使用“复制给 Codex”。');}catch{status('此浏览器无法复制图片，可点“保存局部图片”，或用“复制给 Codex”自动带上图片文件引用。',true);}};
+$('list').onclick=()=>action(async()=>{const config=await json('/wpf-preview/config');document.title=config.applicationName+' · WPF 样式预览';for(const id of ['sample','emptySample']){$(id).hidden=!config.canOpenWindow;$(id).textContent=config.openWindowLabel;}await list();});$('refresh').onclick=()=>action(refresh);$('windows').onchange=()=>action(refresh);
+$('sample').onclick=()=>action(async()=>{status('正在打开窗口…');const before=await json('/wpf-preview/windows');await json('/wpf-preview/open-window',{method:'POST',headers:{'Content-Type':'application/json','X-Wpf-Preview':'context'},body:'{}'});for(let i=0;i<20;i++){const windows=await json('/wpf-preview/windows');if(windows.length){await list(windows.find(w=>!before.some(old=>old.id===w.id))?.id);return;}await new Promise(resolve=>setTimeout(resolve,250));}throw Error('窗口仍在加载，请稍后重新扫描。');});
+function commentError(message){
+ $('annotationError').textContent=message;$('annotationError').hidden=false;
+ if(!annotationOpen)status(message,true);else positionAnnotation();
+}
+function openAnnotation(){
+ if(!selected)return;
+ annotationOpen=true;$('annotation').hidden=false;
+ $('annotationTitle').textContent=editingItem?`批注 ${queue.indexOf(editingItem)+1}`:(selected.kind==='region'?'批注这个区域':`批注 · ${selected.element.name||selected.element.type.split('.').pop()}`);
+ positionAnnotation();
+ if($('annotation').style.visibility!=='hidden')$('note').focus({preventScroll:true});
+}
+function closeAnnotation(){
+ if(copying)return;
+ annotationOpen=false;positionAnnotation();$('viewport').focus({preventScroll:true});
+}
+function positionAnnotation(){
+ const resume=$('resumeComment');resume.hidden=!selected||annotationOpen||!!editingItem||!!drag;resume.disabled=busy||copying;
+ if(!resume.hidden){resume.style.left=(selected.bounds.x+selected.bounds.width)/frame.width*100+'%';resume.style.top=selected.bounds.y/frame.height*100+'%';}
+ const popup=$('annotation');popup.hidden=!annotationOpen||!selected||!!drag;
+ if(popup.hidden)return;
+ const area=$('viewport').getBoundingClientRect(),surface=document.querySelector('.workspace').getBoundingClientRect(),anchor=$('outline').getBoundingClientRect();
+ const visible=anchor.right>area.left&&anchor.left<area.right&&anchor.bottom>area.top&&anchor.top<area.bottom;
+ popup.style.visibility=visible?'visible':'hidden';if(!visible)return;
+ const margin=12,gap=12,minX=area.left+margin,minY=area.top+margin,maxX=area.right-margin,maxY=area.bottom-margin;
+ popup.style.width=Math.min(360,Math.max(1,maxX-minX))+'px';popup.style.maxHeight=Math.max(1,maxY-minY)+'px';
+ const width=popup.offsetWidth,height=popup.offsetHeight;
+ const left=Math.max(minX,Math.min(maxX-width,anchor.left));
+ // 优先紧贴选区下方；靠近画布底部时翻到上方，再夹紧到可见范围。
+ let top=anchor.bottom+gap;
+ if(top+height>maxY)top=anchor.top-gap-height;
+ top=Math.max(minY,Math.min(maxY-height,top));
+ popup.style.left=(left-surface.left)+'px';popup.style.top=(top-surface.top)+'px';
+}
+function pick(value){
+ try{
+  if(selected&&($('note').value.trim()||editingItem))saveDraft();
+  editingItem=null;$('note').value='';select(value);renderQueue();
+ }catch(e){drawOutline(selected?.bounds,selected?.kind==='region');openAnnotation();commentError(e.message);}
+}
+function editSaved(item){
+ if(copying||busy||frame?.frameId!==item.frame.frameId)return;
+ if(selected&&editingItem===item){openAnnotation();return;}
+ try{
+  if(selected&&editingItem!==item&&($('note').value.trim()||editingItem))saveDraft();
+  editingItem=item;$('note').value=item.note;
+  select({kind:item.kind,bounds:{...item.bounds},element:item.element});
+  // 侧栏入口可能对应屏外标记，先滚动选区到视野内，再定位浮层。
+  const viewport=$('viewport'),area=viewport.getBoundingClientRect(),bounds=$('outline').getBoundingClientRect();
+  if(bounds.left<area.left)viewport.scrollLeft+=bounds.left-area.left-16;else if(bounds.right>area.right)viewport.scrollLeft+=bounds.right-area.right+16;
+  if(bounds.top<area.top)viewport.scrollTop+=bounds.top-area.top-16;else if(bounds.bottom>area.bottom)viewport.scrollTop+=bounds.bottom-area.bottom+16;
+  positionAnnotation();$('note').focus({preventScroll:true});renderQueue();
+ }catch(e){commentError(e.message);}
+}
+function renderMarkers(){
+ $('commentMarkers').replaceChildren();if(!frame)return;
+ queue.forEach((item,index)=>{
+  if(item.frame.frameId!==frame.frameId)return;
+  const marker=document.createElement('button');marker.className='comment-marker';marker.textContent=index+1;marker.setAttribute('aria-label',`编辑批注 ${index+1}`);marker.title=item.note||'未填写批注';marker.disabled=busy||copying;
+  if(item===editingItem)marker.setAttribute('aria-current','true');
+  marker.style.left=(item.bounds.x+item.bounds.width)/frame.width*100+'%';marker.style.top=item.bounds.y/frame.height*100+'%';marker.onclick=()=>editSaved(item);$('commentMarkers').append(marker);
+ });
+}
+$('closeAnnotation').onclick=closeAnnotation;$('editComment').onclick=openAnnotation;$('resumeComment').onclick=openAnnotation;
+$('closeHandoff').onclick=()=>{$('handoff').hidden=true;};
+$('submitComment').onclick=()=>copyContext(true);
+$('note').addEventListener('compositionstart',()=>{composing=true;});
+$('note').addEventListener('compositionend',()=>{composing=false;compositionEndedAt=performance.now();});
+$('note').addEventListener('keydown',e=>{
+ // 中文输入法的确认键不提交批注，包括部分浏览器 compositionend 后的尾随 Enter。
+ if(e.isComposing||composing||e.keyCode===229||performance.now()-compositionEndedAt<250)return;
+ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!e.repeat)copyContext(true);}
+ else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeAnnotation();}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drag&&annotationOpen&&!composing&&!e.isComposing)closeAnnotation();});
+new ResizeObserver(positionAnnotation).observe($('annotation'));
+$('emptySample').onclick=()=>$('sample').click();
+action(async()=>{const config=await json('/wpf-preview/config');document.title=config.applicationName+' · WPF 样式预览';for(const id of ['sample','emptySample']){$(id).hidden=!config.canOpenWindow;$(id).textContent=config.openWindowLabel;}await list();});
+</script>
+</body>
+</html>

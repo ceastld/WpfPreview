@@ -1,0 +1,31 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-pack:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: 构建独立示例
+        run: dotnet build samples/WpfPreview.Sample/WpfPreview.Sample.csproj -c Debug
+      - name: 验证截图、上下文和 Attach 生命周期
+        run: dotnet test tests/WpfPreview.Tests/WpfPreview.Tests.csproj -c Debug
+      - name: 生成 NuGet 包
+        run: dotnet pack src/WpfPreview/WpfPreview.csproj -c Release -o artifacts/packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WpfPreview-packages
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error

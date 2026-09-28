@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Description>WPF 开发预览：真实截图、控件定位与界面批注。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>ceastld</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ceastld/WpfPreview</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ceastld/WpfPreview</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>wpf;preview;xaml;annotations;development</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" />
+    <InternalsVisibleTo Include="WpfPreview.Tests" />
+    <EmbeddedResource Include="Web\index.html" LogicalName="WpfPreview.index.html" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

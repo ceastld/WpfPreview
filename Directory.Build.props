@@ -1,0 +1,8 @@
+<Project>
+  <!-- 本目录可以独立复制到其它仓库，不继承 Quicker 的构建或版本设置。 -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>
